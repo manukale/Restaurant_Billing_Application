@@ -12,6 +12,7 @@ export const addMenu = async (req, res) => {
             discount,
             hsnCode,
             vegType,
+            organization_id
         } = req.body;
 
         // If using multer for image upload
@@ -25,6 +26,7 @@ export const addMenu = async (req, res) => {
             discount,
             hsnCode,
             vegType,
+            organization_id,
             image: req.body.file,
         });
 
@@ -44,9 +46,9 @@ export const addMenu = async (req, res) => {
         });
     }
 };
-export const getAllMenu = async (req, res) => {
+export const getAllMenuByOrganization = async (req, res) => {
     try {
-        const result = await Menus.find();
+        const result = await Menus.find({organization_id:req.params.id});
         res.status(200).json({ data: result });
     } catch (error) {
         console.log(error);

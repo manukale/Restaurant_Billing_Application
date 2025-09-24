@@ -52,6 +52,7 @@ const AddMenu = ({ open, handleClose ,refresh}) => {
             formData.append("price", menu.price);
             formData.append("vegType", menu.vegType);
             formData.append("image", menu.image); // file input
+            formData.append("organization_id", webuser.organization_id); // file input
 
             const res = await addMenu(formData)
             console.log(res);

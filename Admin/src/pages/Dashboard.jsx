@@ -16,8 +16,10 @@ import {
   ListItemIcon,
   ListItemText,
   Modal,
+  Collapse,
 } from "@mui/material";
-
+import ExpandLess from "@mui/icons-material/ExpandLess";
+import ExpandMore from "@mui/icons-material/ExpandMore";
 
 import AddBoxIcon from '@mui/icons-material/AddBox';
 import CurrencyRupeeIcon from '@mui/icons-material/CurrencyRupee';
@@ -38,7 +40,16 @@ const menuItems = [
   },
   { label: "Tables", value: "Tables", icon: <TableRestaurantIcon /> },
  
-  { label: "Expenses", value: "Expenses", icon: <CurrencyRupeeIcon /> },
+  {
+    label: "Expenses",
+    value: "Expenses",
+    icon: <CurrencyRupeeIcon />,
+    subItems: [
+      { label: "Pay Roll", value: "PayRoll" },
+      { label: "Monthly Expenses", value: "MonthlyExpenses" },
+     
+    ],
+  },
   {
     label: "Profile Manager",
     value: "Profile",
@@ -73,7 +84,8 @@ const Dashboard = () => {
   const [open, setOpen] = useState(false);
   const [data, setData] = useState();
  
-  
+  const [openExpenses, setOpenExpenses] = useState(false); // 🔽 toggle state
+
   const logOut = () => {
     logoutUser();
     localStorage.removeItem("orders");
@@ -146,21 +158,54 @@ const Dashboard = () => {
               </Typography>
               <Divider sx={{ mb: 2 }} />
               <List>
-                {menuItems.map((item) => (
-                  <ListItemButton
-                    key={item.value}
-                    selected={comp === item.value}
-                    onClick={() => setComp(item.value)}
-                    sx={comp === item.value ? selected : unSelected}
-                  >
-                    <ListItemIcon
-                      sx={{ color: comp === item.value ? "white" : "#ff765b" }}
+                {menuItems.map((item) =>
+                  item.subItems ? (
+                    <React.Fragment key={item.value}>
+                      {/* Parent Button */}
+                      <ListItemButton
+                        onClick={() => setOpenExpenses(!openExpenses)}
+                        sx={comp.includes("Expenses") ? selected : unSelected}
+                      >
+                        <ListItemIcon sx={{ color: comp.includes("Expenses") ? "white" : "#ff765b" }}>
+                          {item.icon}
+                        </ListItemIcon>
+                        <ListItemText primary={item.label} />
+                        {openExpenses ? <ExpandLess /> : <ExpandMore />}
+                      </ListItemButton>
+
+                      {/* Submenu */}
+                      <Collapse in={openExpenses} timeout="auto" unmountOnExit>
+                        <List component="div" disablePadding>
+                          {item.subItems.map((sub) => (
+                            <ListItemButton
+                              key={sub.value}
+                              sx={{
+                                pl: 6,
+                                ...(comp === sub.value ? selected : unSelected),
+                              }}
+                              selected={comp === sub.value}
+                              onClick={() => setComp(sub.value)}
+                            >
+                              <ListItemText primary={sub.label} />
+                            </ListItemButton>
+                          ))}
+                        </List>
+                      </Collapse>
+                    </React.Fragment>
+                  ) : (
+                    <ListItemButton
+                      key={item.value}
+                      selected={comp === item.value}
+                      onClick={() => setComp(item.value)}
+                      sx={comp === item.value ? selected : unSelected}
                     >
-                      {item.icon}
-                    </ListItemIcon>
-                    <ListItemText primary={item.label} />
-                  </ListItemButton>
-                ))}
+                      <ListItemIcon sx={{ color: comp === item.value ? "white" : "#ff765b" }}>
+                        {item.icon}
+                      </ListItemIcon>
+                      <ListItemText primary={item.label} />
+                    </ListItemButton>
+                  )
+                )}
               </List>
             </Card>
           </Grid>

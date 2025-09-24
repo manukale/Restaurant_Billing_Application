@@ -2,7 +2,12 @@ import mongoose from "mongoose";
 
 const TablesSchema = new mongoose.Schema(
     {
-        table_number: { type: Number, required: true, unique: true,default:0 },
+        table_number: { type: Number, required: true, unique: true, default: 0 },
+        organization_id: {
+                required: true,
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'Organization'
+            },
         status: {
             type: String,
             enum: ["vacant", "reserved", "engaged"],

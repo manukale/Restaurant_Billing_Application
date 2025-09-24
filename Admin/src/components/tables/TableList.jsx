@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Box, Grid, Typography, Card, CardContent, Button } from "@mui/material";
 import { AddOutlined } from "@mui/icons-material";
 import { addTable, getAllTables } from "../../services/TableService";
+import { useAuth } from "../../context/AuthContext";
 
 const getColor = (status) => {
     switch (status) {
@@ -17,13 +18,15 @@ const getColor = (status) => {
 };
 
 const TableList = () => {
+    const { webuser } = useAuth();
     const [tables, setTables] = useState([]);
 
     // Fetch tables from backend
     useEffect(() => {
 
         getTables();
-    }, []); // ✅ only run once on mount
+    }, []); // only run once on mount
+    
     const getTables = async () => {
         try {
             const res = await getAllTables();
@@ -45,6 +48,7 @@ const TableList = () => {
             const newTable = {
                 table_number: newId,
                 status: "vacant",
+                organization_id: webuser.organization_id
             };
 
             const res = await addTable(newTable); // ✅ send full object

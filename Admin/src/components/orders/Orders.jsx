@@ -15,13 +15,15 @@ import {
 import AddIcon from "@mui/icons-material/Add";
 import RemoveIcon from "@mui/icons-material/Remove";
 import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
-import { getAllMenu } from "../../services/MenuService";
+import {  getAllMenuByOrganization } from "../../services/MenuService";
 import { getAllTables, updateTable } from "../../services/TableService";
+import { useAuth } from "../../context/AuthContext";
 
 // const tableOptions = ["Table 1", "Table 2", "Table 3", "Table 4", "Takeaway"];
 
 const Orders = () => {
     // multiple orders state
+    const { webuser } = useAuth();
     const [menuItems, setMenuItems] = useState();
     const [tables, setTables] = useState([]);
     
@@ -47,7 +49,7 @@ const Orders = () => {
     useEffect(() => {
         const getMenu = async () => {
             try {
-                const res = await getAllMenu();
+                const res = await getAllMenuByOrganization(webuser.organization_id);
                 setMenuItems(res.data)
                 const category = [...new Set(res.data.map(item => item.category).filter(Boolean))];
                 console.log("categories::", category);
@@ -72,9 +74,15 @@ const Orders = () => {
     };
     const orderStatus = async () => {
         try {
+            if (orders.length === 0) {
+                const newId = 1;
+                setOrders([{ id: newId, status: "Processing", timeAgo: "just now", cart: [], table: "" }]);
+                setSelectedOrderId(newId);
+                return;
+            }
             const currentOrder = orders.find((order) => order.id === selectedOrderId);
 
-            if (!currentOrder || currentOrder.cart.length === 0) {
+            if (!currentOrder || currentOrder?.cart?.length === 0) {
                 alert("Previous order is empty");
             } else {
                 const newId = orders.length + 1;
@@ -150,6 +158,44 @@ const Orders = () => {
             console.error("Failed to update table:", error);
         }
     };
+    // inside Orders.jsx
+
+    const completeOrder = async () => {
+        try {
+            const currentOrder = orders.find((order) => order.id === selectedOrderId);
+
+            if (!currentOrder) {
+                alert("No active order selected");
+                return;
+            }
+
+            if (!currentOrder.table) {
+                alert("Please assign a table before completing the order");
+                return;
+            }
+
+            // ✅ Update backend: set table to vacant
+            await updateTable(currentOrder.table, { status: "vacant" });
+
+            // ✅ Remove completed order from local state
+            const updatedOrders = orders.filter((order) => order.id !== selectedOrderId);
+            setOrders(updatedOrders);
+
+            // ✅ Reset selected order
+            if (updatedOrders.length > 0) {
+                setSelectedOrderId(updatedOrders[0].id); // select next available
+            } else {
+                setSelectedOrderId(null);
+            }
+
+            alert(`Order #${currentOrder.id} completed. Table ${currentOrder.table} is now vacant.`);
+        } catch (error) {
+            console.error("Failed to complete order:", error);
+            alert("Something went wrong while completing the order.");
+        }
+    };
+
+
     // Bill totals
     const subtotal = selectedOrder?.cart.reduce(
         (sum, item) => sum + item.price * item.qty,
@@ -182,7 +228,7 @@ const Orders = () => {
                     flexShrink: 0
                 }}
             >
-                {orders.map((order) => (
+                {orders?.filter((order) => order.status === 'Processing').map((order) => (
                     <Card
                         key={order.id}
                         onClick={() => setSelectedOrderId(order.id)}
@@ -358,30 +404,39 @@ const Orders = () => {
                         <TextField
                             select
                             label="Select Table"
-                            value={selectedOrder.table || ""}
-                            onChange={handleUpdate} 
-
+                            value={selectedOrder?.table || ""}
+                            onChange={handleUpdate}
                             size="small"
-                            sx={{ mb: 2, bgcolor: "white", width: '200px' }}
+                            sx={{ mb: 2, bgcolor: "white", width: "200px" }}
                         >
-                            {tables.filter((table) => !orders.some((order) => order.table ===
-                            table.table_number && order.id !== selectedOrderId)
+                            {tables
+                                // ✅ only vacant tables
+                                .filter((table) => table.status === "vacant")
+                                // ✅ make sure no other active order has this table
+                                .filter(
+                                    (table) =>
+                                        !orders.some(
+                                            (order) =>
+                                                order.table === table.table_number &&
+                                                order.id !== selectedOrderId 
+                                        )
                                 )
                                 .map((table) => (
-                                <MenuItem key={table.table_number} value={table.table_number}>
-                                    Table {table.table_number}
-                                </MenuItem>
-                            ))}
+                                    <MenuItem key={table.table_number} value={table.table_number}>
+                                        Table {table.table_number}
+                                    </MenuItem>
+                                ))}
                         </TextField>
+
                     </Box>
                     {/* Scrollable Cart Items */}
                     <Box sx={{ flex: 1, overflowY: "auto", pr: 1 }}>
-                        {selectedOrder.cart.length === 0 ? (
+                        {selectedOrder?.cart?.length === 0 ? (
                             <Typography color="textSecondary" textAlign="center" sx={{ mt: 4 }}>
                                 Cart is empty
                             </Typography>
                         ) : (
-                            selectedOrder.cart.map((item) => (
+                            selectedOrder?.cart?.map((item) => (
                                 <Box
                                     key={item._id}
                                     sx={{
@@ -437,15 +492,16 @@ const Orders = () => {
                     <Button
                         fullWidth
                         variant="contained"
-                        disabled={selectedOrder.cart.length === 0}
+                        disabled={selectedOrder?.cart?.length === 0}
                         sx={{
                             mt: 2,
                             bgcolor: "tomato",
                             "&:hover": { bgcolor: "darkred" },
                             flexShrink: 0
                         }}
+                        onClick={completeOrder}
                     >
-                        Proceed to Pay
+                        Complete Order
                     </Button>
                 </Box>
             </Box>

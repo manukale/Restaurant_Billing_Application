@@ -3,10 +3,12 @@ import { DataGrid, GridCellEditStopReasons } from "@mui/x-data-grid";
 import DeleteIcon from "@mui/icons-material/Delete";
 import React, { useEffect, useState } from 'react'
 import AddMenu from './AddMenu';
-import { deleteMenu, getAllMenu, updateMenu } from '../../services/MenuService';
+import { deleteMenu,  getAllMenuByOrganization, updateMenu } from '../../services/MenuService';
 import { AddOutlined } from '@mui/icons-material';
+import { useAuth } from '../../context/AuthContext';
 
 const MenuList = () => {
+    const { webuser } = useAuth();
     const [menus, setMenus] = useState();
     const [showSnackbar, setShowSnackbar] = useState(false);
     const [snackbarMessage, setSnackbarMessage] = useState("");
@@ -19,9 +21,13 @@ const MenuList = () => {
         console.log('Manasi');
 
     }, [])
+    console.log(webuser.organization_id);
     const fetchMenu = async () => {
         try {
-            const res = await getAllMenu()
+            
+            const res = await getAllMenuByOrganization(webuser.organization_id)
+            console.log(res);
+            
             setMenus(res.data)
         } catch (error) {
             console.log(error);

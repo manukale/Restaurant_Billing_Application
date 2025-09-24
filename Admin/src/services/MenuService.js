@@ -25,9 +25,11 @@ export const addMenu = async (formData) => {
         throw error.response?.data || error.message;
     }
 };
-export const getAllMenu = async () => {
+export const getAllMenuByOrganization = async (id) => {
     try {
-        const res = await axios.get(`${BASE_URL}/menu/getAll`);
+        console.log(`${BASE_URL}/menu/getAll/${id}`);
+        
+        const res = await axios.get(`${BASE_URL}/menu/getAll/${id}`);
         return res.data;
     } catch (error) {
         console.error("Error getting menu:", error);

@@ -4,7 +4,7 @@ export const addTable = async (req, res) => {
     try {
         console.log(req.body);
         
-        const { table_number, status } = req.body;
+        const { table_number, status,organization_id } = req.body;
 
         if (!table_number) {
             return res.status(400).json({ error: "table_number is required" });
@@ -12,7 +12,8 @@ export const addTable = async (req, res) => {
 
         const newTable = new Tables({
             table_number,
-            status: status || "vacant",
+          status: status || "vacant",
+            organization_id
         });
 
         await newTable.save();

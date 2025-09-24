@@ -1,11 +1,11 @@
 import express from 'express'
 const router = express.Router();
 import { protect } from "../middleware/authmiddleware.js";
-import { addMenu, deleteMenu, getAllMenu, updateMenu } from '../controller/MenusController.js';
+import { addMenu, deleteMenu, getAllMenuByOrganization, updateMenu } from '../controller/MenusController.js';
 import upload from '../middleware/uploadMiddleware.js';
 
 
-router.get('/getAll', getAllMenu); // get
+router.get('/getAll/:id', getAllMenuByOrganization); // get
 router.use(protect);
 router.post('/', upload.single("image"), addMenu); // Create
 router.delete('/delete/:id',deleteMenu); // Delete
